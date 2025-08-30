@@ -2,3 +2,8 @@ Flask==2.3.3
 Flask-CORS==4.0.0
 PyMySQL==1.1.0
 python-dotenv==1.0.0
+requests==2.31.0
+plotly==5.17.0
+pandas==2.1.4
+ultralytics==8.0.196
+Werkzeug==2.3.7
