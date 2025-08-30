@@ -28,11 +28,11 @@ def get_db_connection():
 
 # Flask 앱 설정
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # 세션 보안 키
+app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')  # 세션 보안 키
 
 # CORS 허용 (React 연결)
 CORS(app,
-     resources={r"/*": {"origins": "http://localhost:3000"}},
+     resources={r"/*": {"origins": ["http://localhost:3000", "https://smart-farm-hub.app"]}},
      supports_credentials=True)
 
 # 블루프린트 등록
