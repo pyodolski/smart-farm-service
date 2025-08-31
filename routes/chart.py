@@ -102,24 +102,48 @@ def fetch_monthly_price(year, itemcode, title, is_retail=False):
                 if yearavg_text and yearavg_text != '-':
                     yearavg = float(yearavg_text.replace(',', ''))
                 break
+    # pandas 대신 기본 Python 사용
+    months_data = []
+    for i, price in enumerate(months):
+        months_data.append({
+            'Month': i + 1,
+            'Price': price
+        })
+    
+    # MoM_Change 계산 (pandas 대신)
+    mom_changes = []
+    for i, price in enumerate(months):
+        if i == 0:
+            mom_changes.append(0)
+        else:
+            prev_price = months[i-1]
+            if prev_price > 0:
+                mom_change = ((price - prev_price) / prev_price) * 100
+            else:
+                mom_change = 0
+            mom_changes.append(round(mom_change, 2))
+    
+    # DiffFromAvg 계산
     valid_months = [v for v in months if v > 0]
     if valid_months:
         yearavg = sum(valid_months) / len(valid_months)
     else:
         yearavg = 0
-    df = pd.DataFrame({'Month': range(1, 13), 'Price': months})
-    df['MoM_Change'] = df['Price'].pct_change().replace([float('inf'), float('-inf')], 0) * 100
-    df['MoM_Change'] = df['MoM_Change'].fillna(0).round(2)
-    if yearavg > 0:
-        df['DiffFromAvg'] = ((df['Price'] - yearavg) / yearavg * 100).round(2)
-    else:
-        df['DiffFromAvg'] = 0
+    
+    diff_from_avg = []
+    for price in months:
+        if yearavg > 0:
+            diff = ((price - yearavg) / yearavg) * 100
+        else:
+            diff = 0
+        diff_from_avg.append(round(diff, 2))
+    
+    # hovertexts 생성
     hovertexts = []
-    for i, row in df.iterrows():
-        m = int(row['Month'])
-        price = int(row['Price'])
-        mom = row['MoM_Change']
-        diff = row['DiffFromAvg']
+    for i, price in enumerate(months):
+        m = i + 1
+        mom = mom_changes[i]
+        diff = diff_from_avg[i]
         if price == 0:
             hovertexts.append(f"{m}월: 데이터 없음")
         else:
@@ -128,6 +152,7 @@ def fetch_monthly_price(year, itemcode, title, is_retail=False):
                 f"전월 대비: {mom:+.2f}%<br>"
                 f"연평균 대비: {diff:+.2f}%"
             )
+    
     x = [f"{m}월" for m in range(1, 13)]
     trace = go.Scatter(
         x=x,
