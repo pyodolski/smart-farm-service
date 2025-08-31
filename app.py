@@ -32,6 +32,20 @@ CORS(app,
      resources={r"/*": {"origins": ["http://localhost:3000", "https://smart-farm-hub.app"]}},
      supports_credentials=True)
 
+# 루트 경로 추가
+@app.route('/')
+def home():
+    return jsonify({
+        'message': 'Smart Farm API is running!',
+        'status': 'success',
+        'endpoints': {
+            'users': '/login',
+            'posts': '/api/posts',
+            'farms': '/api/farms',
+            'products': '/product/subscribe'
+        }
+    })
+
 # 블루프린트 등록
 app.register_blueprint(user_bp)
 app.register_blueprint(farm_bp)
