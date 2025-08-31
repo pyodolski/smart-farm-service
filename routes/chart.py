@@ -211,11 +211,6 @@ def statistics_api():
 
 @chart_bp.route('/api/charts', methods=['GET'])
 def get_charts():
-    # pandas 대신 기본 Python 리스트 사용
-    data = [
-        {'x': 1, 'y': 10},
-        {'x': 2, 'y': 20},
-        {'x': 3, 'y': 30}
-    ]
-    return jsonify(data)
+    # 임시로 기본 응답만 반환
+    return jsonify({'message': 'Charts temporarily disabled'})
 

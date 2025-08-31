@@ -1,11 +1,10 @@
 # app.py
 import os
-import pymysql  # psycopg2 대신 pymysql 유지
+import psycopg2
 from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
-from config import DB_CONFIG
 
-# 블루프린트 임포트
+# 기본 블루프린트만 임포트
 from routes.user import user_bp
 from routes.admin import admin_bp
 from routes.farm import farm_bp
@@ -18,14 +17,14 @@ from routes.sensor import sensor_bp
 # PostgreSQL 연결 함수
 def get_db_connection():
     try:
-        return pymysql.connect(
-            host=DB_CONFIG['host'],
-            user=DB_CONFIG['user'],
-            password=DB_CONFIG['password'],
-            database=DB_CONFIG['database'],
-            port=DB_CONFIG['port']
+        return psycopg2.connect(
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database=os.getenv('DB_NAME'),
+            port=os.getenv('DB_PORT')
         )
-    except pymysql.Error as e:
+    except psycopg2.Error as e:
         print(f"DB 연결 실패: {e}")
         return None
 
@@ -38,7 +37,7 @@ CORS(app,
      resources={r"/*": {"origins": ["http://localhost:3000", "https://smart-farm-hub.app"]}},
      supports_credentials=True)
 
-# 블루프린트 등록
+# 기본 블루프린트만 등록
 app.register_blueprint(user_bp)
 app.register_blueprint(farm_bp)
 app.register_blueprint(post_bp)
