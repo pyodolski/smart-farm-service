@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify, Blueprint
 import plotly.graph_objs as go
-import pandas as pd
+# import pandas as pd  # 주석 처리
 from flask_cors import CORS
 # 연간 시세 :  https://www.kamis.or.kr/customer/reference/openapi_list.do?action=detail&boardno=9
 # 월간 도소매 사새 :
@@ -208,4 +208,14 @@ def statistics_api():
         'plot_json': plot_json,
         'graph_title': graph_title
     })
+
+@chart_bp.route('/api/charts', methods=['GET'])
+def get_charts():
+    # pandas 대신 기본 Python 리스트 사용
+    data = [
+        {'x': 1, 'y': 10},
+        {'x': 2, 'y': 20},
+        {'x': 3, 'y': 30}
+    ]
+    return jsonify(data)
 
