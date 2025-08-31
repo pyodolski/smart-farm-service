@@ -1,9 +1,8 @@
 # app.py
 import os
-import pymysql  # psycopg2 대신 pymysql 사용
+import psycopg2 # pymysql 대신 psycopg2 사용
 from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
-from config import DB_CONFIG
 
 # 블루프린트 임포트
 from routes.user import user_bp
@@ -15,11 +14,19 @@ from routes.product import product_bp
 from routes.notification import notification_bp
 from routes.sensor import sensor_bp
 
-# MySQL 연결 함수
+# PostgreSQL 연결 함수
 def get_db_connection():
     try:
-        return pymysql.connect(**DB_CONFIG)
-    except pymysql.MySQLError as e:
+        # 환경 변수에서 데이터베이스 접속 정보 가져오기
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST'),
+            port=os.getenv('DB_PORT'),
+            database=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD')
+        )
+        return conn
+    except psycopg2.OperationalError as e:
         print(f"DB 연결 실패: {e}")
         return None
 
