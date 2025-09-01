@@ -6,7 +6,14 @@ import json
 from utils.database import get_db_connection
 import requests
 from collections import Counter
-from ultralytics import YOLO
+
+try:
+    from ultralytics import YOLO
+    YOLO_AVAILABLE = True
+except ImportError:
+    YOLO_AVAILABLE = False
+    print("Warning: ultralytics not available. YOLO features disabled.")
+
 import os
 
 
