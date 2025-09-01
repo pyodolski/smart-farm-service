@@ -7,11 +7,18 @@ from flask_cors import CORS
 from email.mime.text import MIMEText
 from email.header import Header
 from utils.database import get_db_connection, get_dict_cursor_connection
+import psycopg2
 
 user_bp = Blueprint('user', __name__)
 
 def get_db_conn():
-    return pymysql.connect(**DB_CONFIG)
+    return psycopg2.connect(
+        host=DB_CONFIG['host'],
+        user=DB_CONFIG['user'],
+        password=DB_CONFIG['password'],
+        database=DB_CONFIG['database'],
+        port=DB_CONFIG['port']
+    )
 
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
