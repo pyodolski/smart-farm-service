@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
-import pymysql
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from utils.database import get_db_connection
 
 sensor_bp = Blueprint('sensor', __name__)
@@ -10,7 +11,7 @@ def get_latest_sensor():
     if not gh_id:
         return jsonify({'error': 'gh_id required'}), 400
     conn = get_db_connection()
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM sensor_log WHERE gh_id = %s ORDER BY timestamp DESC LIMIT 1", (gh_id,))
     row = cur.fetchone()
     conn.close()

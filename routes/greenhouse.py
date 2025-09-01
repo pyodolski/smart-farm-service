@@ -1,7 +1,7 @@
 # routes/greenhouse.py
 
 from flask import Blueprint, request, jsonify, session, render_template
-import pymysql
+import psycopg2
 import json
 from utils.database import get_db_connection
 import requests
@@ -185,7 +185,7 @@ def delete_greenhouse(greenhouse_id):
 def list_greenhouses(farm_id):
     try:
         conn = get_db_connection()
-        cur = conn.cursor(pymysql.cursors.DictCursor)
+        cur = conn.cursor(psycopg2.extras.RealDictCursor)
         sql = "SELECT id, name FROM greenhouses WHERE farm_id = %s"
         cur.execute(sql, (farm_id,))
         greenhouses = cur.fetchall()
@@ -205,7 +205,7 @@ def grid_generator():
     grid_data = []
 
     conn = get_db_connection()
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+    cur = conn.cursor(psycopg2.extras.RealDictCursor)
 
     if greenhouse_id:
         cur.execute("SELECT * FROM greenhouses WHERE id = %s", (greenhouse_id,))
@@ -250,7 +250,7 @@ def get_grid_data():
         return jsonify({'error': 'greenhouse_id required'}), 400
 
     conn = get_db_connection()
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+    cur = conn.cursor(psycopg2.extras.RealDictCursor)
     cur.execute("SELECT num_rows, num_cols, grid_data FROM greenhouses WHERE id = %s", (greenhouse_id,))
     greenhouse = cur.fetchone()
     conn.close()
@@ -267,7 +267,7 @@ def get_grid_data():
 @greenhouse_bp.route('/<int:greenhouse_id>/groups', methods=['GET'])
 def get_crop_groups(greenhouse_id):
     conn = get_db_connection()
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+    cur = conn.cursor(psycopg2.extras.RealDictCursor)
     cur.execute("SELECT id, group_cells, crop_type, is_horizontal, harvest_amount, total_amount FROM crop_groups WHERE greenhouse_id = %s", (greenhouse_id,))
     groups = cur.fetchall()
     conn.close()

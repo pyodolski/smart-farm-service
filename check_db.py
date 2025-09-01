@@ -1,10 +1,16 @@
-import pymysql
+import psycopg2
 from config import DB_CONFIG
 
 def get_db_connection():
     try:
-        return pymysql.connect(**DB_CONFIG)
-    except pymysql.MySQLError as e:
+        return psycopg2.connect(
+            host=DB_CONFIG['host'],
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password'],
+            database=DB_CONFIG['database'],
+            port=DB_CONFIG['port']
+        )
+    except psycopg2.Error as e:
         print(f"DB 연결 실패: {e}")
         return None
 
@@ -12,7 +18,13 @@ def check_database():
     try:
         print("데이터베이스 연결 시도 중...")
         print(f"연결 정보: {DB_CONFIG}")
-        conn = pymysql.connect(**DB_CONFIG)
+        conn = psycopg2.connect(
+            host=DB_CONFIG['host'],
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password'],
+            database=DB_CONFIG['database'],
+            port=DB_CONFIG['port']
+        )
         print("데이터베이스 연결 성공!")
 
         cursor = conn.cursor()
