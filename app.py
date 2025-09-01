@@ -36,7 +36,13 @@ app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
 # CORS 허용
 CORS(app,
-     resources={r"/*": {"origins": ["http://localhost:3000", "https://smart-farm-hub.app", "https://smart-farm-ignore.vercel.app"]}},
+     resources={r"/*": {"origins": [
+         "http://localhost:3000", 
+         "https://smart-farm-hub.app", 
+         "https://smart-farm-ignore.vercel.app",
+         "https://smart-farm-ignore-git-main-pocketopis-projects.vercel.app",
+         "https://smart-farm-ignore-c4z23edds-pocketopis-projects.vercel.app"
+     ]}},
      supports_credentials=True)
 
 # 루트 경로 추가
