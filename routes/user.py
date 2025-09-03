@@ -75,29 +75,24 @@ def send_code():
     data = request.get_json()
     email = data.get('email')
 
-    # 임시로 고정 코드 사용
-    code = "0000"  # str(random.randint(100000, 999999)) 대신 0000
+    code = str(random.randint(100000, 999999))
     session['verify_email'] = email
     session['verify_code'] = code
     
-    # 임시 주석처리
-    # try:
-    #     msg = MIMEText(f'인증번호는 {code} 입니다.', _charset='utf-8')
-    #     msg['Subject'] = Header('이메일 인증번호', 'utf-8')
-    #     msg['From'] = '4642joung@yu.ac.kr'
-    #     msg['To'] = email
+    try:
+        msg = MIMEText(f'인증번호는 {code} 입니다.', _charset='utf-8')
+        msg['Subject'] = Header('이메일 인증번호', 'utf-8')
+        msg['From'] = '4642joung@yu.ac.kr'
+        msg['To'] = email
 
-    #     s = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    #     s.login('4642joung@yu.ac.kr', 'pqvk hxur beny bapi')
-    #     s.send_message(msg)
-    #     s.quit()
+        s = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        s.login('4642joung@yu.ac.kr', 'pqvk hxur beny bapi')
+        s.send_message(msg)
+        s.quit()
 
-    #     return jsonify({'status': 'ok', 'message': '인증번호 전송 완료'})
-    # except Exception as e:
-    #     return jsonify({'message': f'메일 전송 실패: {str(e)}'}), 500
-    
-    # 임시로 성공 응답만 반환
-    return jsonify({'status': 'ok', 'message': '인증번호 전송 완료 (임시)'})
+        return jsonify({'status': 'ok', 'message': '인증번호 전송 완료'})
+    except Exception as e:
+        return jsonify({'message': f'메일 전송 실패: {str(e)}'}), 500
 
 #이메일 코드 일치/불일치 확인
 @user_bp.route('/check_code', methods=['POST'])

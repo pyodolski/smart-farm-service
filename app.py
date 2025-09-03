@@ -10,7 +10,7 @@ from routes.admin import admin_bp
 from routes.farm import farm_bp
 from routes.post import post_bp
 from routes.product import product_bp
-# from routes.greenhouse import greenhouse_bp  # 임시로 주석 처리
+from routes.greenhouse import greenhouse_bp
 from routes.notification import notification_bp
 from routes.sensor import sensor_bp
 
@@ -66,7 +66,7 @@ app.register_blueprint(farm_bp)
 app.register_blueprint(post_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(product_bp)
-# app.register_blueprint(greenhouse_bp, url_prefix='/api/greenhouses')  # 임시로 주석 처리
+app.register_blueprint(greenhouse_bp, url_prefix='/api/greenhouses')
 app.register_blueprint(notification_bp)
 app.register_blueprint(sensor_bp)
 

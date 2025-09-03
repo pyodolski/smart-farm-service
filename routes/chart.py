@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify, Blueprint
 import plotly.graph_objs as go
-# import pandas as pd  # 주석 처리
+import pandas as pd
 from flask_cors import CORS
 # 연간 시세 :  https://www.kamis.or.kr/customer/reference/openapi_list.do?action=detail&boardno=9
 # 월간 도소매 사새 :
