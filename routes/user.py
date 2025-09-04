@@ -54,7 +54,7 @@ def login():
                             "nickname": nickname
                         }
 
-                        if is_admin == 1:
+                        if is_admin:
                             response["admin"] = True
 
                         return jsonify(response), 200

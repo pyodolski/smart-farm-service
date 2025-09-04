@@ -3,6 +3,10 @@ import os
 import psycopg2 # pymysql 대신 psycopg2 사용
 from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
 
 # 블루프린트 임포트
 from routes.user import user_bp
@@ -10,7 +14,10 @@ from routes.admin import admin_bp
 from routes.farm import farm_bp
 from routes.post import post_bp
 from routes.product import product_bp
-# from routes.greenhouse import greenhouse_bp
+from routes.greenhouse import greenhouse_bp
+from routes.crop import crop_bp
+from routes.chart import chart_bp
+from routes.weather import weather_bp
 from routes.notification import notification_bp
 from routes.sensor import sensor_bp
 
@@ -66,7 +73,10 @@ app.register_blueprint(farm_bp)
 app.register_blueprint(post_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(product_bp)
-# app.register_blueprint(greenhouse_bp, url_prefix='/api/greenhouses')
+app.register_blueprint(greenhouse_bp, url_prefix='/api/greenhouses')
+app.register_blueprint(crop_bp)
+app.register_blueprint(chart_bp)
+app.register_blueprint(weather_bp)
 app.register_blueprint(notification_bp)
 app.register_blueprint(sensor_bp)
 
