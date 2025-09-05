@@ -236,7 +236,15 @@ def grid_generator():
             house_name = greenhouse[1]
             num_rows = greenhouse[2]
             num_cols = greenhouse[3]
-            grid_data = json.loads(greenhouse[4])
+            # grid_data 처리 - 이미 리스트인지 문자열인지 확인
+            grid_data = greenhouse[4]
+            if isinstance(grid_data, str):
+                try:
+                    grid_data = json.loads(grid_data)
+                except (json.JSONDecodeError, TypeError):
+                    grid_data = []
+            elif not isinstance(grid_data, list):
+                grid_data = []
         else:
             conn.close()
             return "존재하지 않는 비닐하우스입니다.", 404
@@ -279,10 +287,20 @@ def get_grid_data():
     if not greenhouse:
         return jsonify({'error': '존재하지 않는 비닐하우스입니다.'}), 404
 
+    # grid_data 처리 - 이미 리스트인지 문자열인지 확인
+    grid_data = greenhouse[2]
+    if isinstance(grid_data, str):
+        try:
+            grid_data = json.loads(grid_data)
+        except (json.JSONDecodeError, TypeError):
+            grid_data = []
+    elif not isinstance(grid_data, list):
+        grid_data = []
+
     return jsonify({
         'num_rows': greenhouse[0],
         'num_cols': greenhouse[1],
-        'grid_data': json.loads(greenhouse[2])
+        'grid_data': grid_data
     })
 
 @greenhouse_bp.route('/<int:greenhouse_id>/groups', methods=['GET'])
