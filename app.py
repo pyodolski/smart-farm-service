@@ -4,6 +4,7 @@ import psycopg2 # pymysql 대신 psycopg2 사용
 from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import timedelta
 
 # .env 파일 로드
 load_dotenv()
@@ -41,6 +42,12 @@ def get_db_connection():
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
+# 세션 설정 (CORS와 쿠키를 위한)
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS에서만 쿠키 전송
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # CORS 요청에서 쿠키 허용
+
+# CORS 설정 개선
 CORS(app, 
      origins=[
          "http://localhost:3000",
@@ -50,8 +57,12 @@ CORS(app,
          "https://smart-farm-ignore-c4z23edds-pocketopis-projects.vercel.app"
      ],
      supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     expose_headers=["Content-Range", "X-Content-Range"])
+
+# 세션 타임아웃 설정
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # 루트 경로 추가
 @app.route('/')

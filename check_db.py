@@ -29,21 +29,29 @@ def check_database():
 
         cursor = conn.cursor()
         
-        # 테이블 목록 조회
-        cursor.execute("SHOW TABLES")
+        cursor.execute("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+        """)
         tables = cursor.fetchall()
-        print(f"테이블 목록: {tables}")
+        print(f"테이블 목록: {[table[0] for table in tables]}")
         
-        # board 테이블 구조 확인
+        # board 테이블 구조 확인 (PostgreSQL 문법)
         try:
-            cursor.execute("DESCRIBE board")
+            cursor.execute("""
+                SELECT column_name, data_type, is_nullable 
+                FROM information_schema.columns 
+                WHERE table_name = 'board'
+                ORDER BY ordinal_position
+            """)
             columns = cursor.fetchall()
             print(f"board 테이블 구조: {columns}")
             
             # 게시글 수 확인
             cursor.execute("SELECT COUNT(*) FROM board")
             count = cursor.fetchone()
-            print(f"board 테이블 게시글 수: {count}")
+            print(f"board 테이블 게시글 수: {count[0]}")
             
             # 샘플 게시글 확인
             cursor.execute("SELECT * FROM board LIMIT 1")
@@ -55,21 +63,23 @@ def check_database():
         except Exception as e:
             print(f"board 테이블 조회 실패: {e}")
         
-        # likes 테이블 구조 확인
+        # farms 테이블 구조 확인
         try:
-            cursor.execute("DESCRIBE likes")
+            cursor.execute("""
+                SELECT column_name, data_type, is_nullable 
+                FROM information_schema.columns 
+                WHERE table_name = 'farms'
+                ORDER BY ordinal_position
+            """)
             columns = cursor.fetchall()
-            print(f"likes 테이블 구조: {columns}")
+            print(f"farms 테이블 구조: {columns}")
+            
+            # 농장 수 확인
+            cursor.execute("SELECT COUNT(*) FROM farms")
+            count = cursor.fetchone()
+            print(f"farms 테이블 농장 수: {count[0]}")
         except Exception as e:
-            print(f"likes 테이블 조회 실패: {e}")
-        
-        # comments 테이블 구조 확인
-        try:
-            cursor.execute("DESCRIBE comments")
-            columns = cursor.fetchall()
-            print(f"comments 테이블 구조: {columns}")
-        except Exception as e:
-            print(f"comments 테이블 조회 실패: {e}")
+            print(f"farms 테이블 조회 실패: {e}")
         
         cursor.close()
         conn.close()
