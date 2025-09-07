@@ -274,34 +274,43 @@ def grid_generator():
 
 @greenhouse_bp.route('/api/grid', methods=['GET'])
 def get_grid_data():
-    greenhouse_id = request.args.get('id')
-    if not greenhouse_id:
-        return jsonify({'error': 'greenhouse_id required'}), 400
+    try:
+        greenhouse_id = request.args.get('id')
+        if not greenhouse_id:
+            return jsonify({'error': 'greenhouse_id required'}), 400
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT num_rows, num_cols, grid_data FROM greenhouses WHERE id = %s", (greenhouse_id,))
-    greenhouse = cur.fetchone()
-    conn.close()
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'DB 연결 실패'}), 500
+            
+        cur = conn.cursor()
+        cur.execute("SELECT num_rows, num_cols, grid_data FROM greenhouses WHERE id = %s", (greenhouse_id,))
+        greenhouse = cur.fetchone()
+        
+        if not greenhouse:
+            return jsonify({'error': '존재하지 않는 비닐하우스입니다.'}), 404
 
-    if not greenhouse:
-        return jsonify({'error': '존재하지 않는 비닐하우스입니다.'}), 404
-
-    # grid_data 처리 - 이미 리스트인지 문자열인지 확인
-    grid_data = greenhouse[2]
-    if isinstance(grid_data, str):
-        try:
-            grid_data = json.loads(grid_data)
-        except (json.JSONDecodeError, TypeError):
+        # grid_data 처리 - 이미 리스트인지 문자열인지 확인
+        grid_data = greenhouse[2]
+        if isinstance(grid_data, str):
+            try:
+                grid_data = json.loads(grid_data)
+            except (json.JSONDecodeError, TypeError):
+                grid_data = []
+        elif not isinstance(grid_data, list):
             grid_data = []
-    elif not isinstance(grid_data, list):
-        grid_data = []
 
-    return jsonify({
-        'num_rows': greenhouse[0],
-        'num_cols': greenhouse[1],
-        'grid_data': grid_data
-    })
+        return jsonify({
+            'num_rows': greenhouse[0],
+            'num_cols': greenhouse[1],
+            'grid_data': grid_data
+        })
+    except Exception as e:
+        print(f"Grid API 오류: {str(e)}")
+        return jsonify({'error': f'그리드 데이터 조회 실패: {str(e)}'}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 @greenhouse_bp.route('/<int:greenhouse_id>/groups', methods=['GET'])
 def get_crop_groups(greenhouse_id):

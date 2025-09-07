@@ -5,6 +5,7 @@ from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import timedelta
+import json # 추가된 임포트
 
 # .env 파일 로드
 load_dotenv()
@@ -47,7 +48,6 @@ app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS에서만 쿠키 전송
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # CORS 요청에서 쿠키 허용
 
-# CORS 설정 개선
 CORS(app, 
      origins=[
          "http://localhost:3000",
@@ -57,9 +57,10 @@ CORS(app,
          "https://smart-farm-ignore-c4z23edds-pocketopis-projects.vercel.app"
      ],
      supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     expose_headers=["Content-Range", "X-Content-Range"])
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+     expose_headers=["Content-Range", "X-Content-Range"],
+     vary_header=True)
 
 # 세션 타임아웃 설정
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
@@ -90,6 +91,20 @@ app.register_blueprint(chart_bp)
 app.register_blueprint(weather_bp)
 app.register_blueprint(notification_bp)
 app.register_blueprint(sensor_bp)
+
+# 전역 오류 처리기 추가
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"전역 오류: {str(e)}")
+    return jsonify({'error': '서버 오류가 발생했습니다.'}), 500
 
 # 서버 실행
 if __name__ == '__main__':
