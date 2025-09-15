@@ -287,22 +287,38 @@ function FarmDetail() {
   const handleCaptureConfirm = async () => {
     if (!selectedCaptureBar || !selectedCaptureIot) return;
     try {
-      await fetch(`${API_BASE_URL}/api/greenhouses/crop_groups/read`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          group_id: selectedCaptureBar?.id,
-          iot_id: selectedCaptureIot?.id,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/greenhouses/crop_groups/read`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            group_id: selectedCaptureBar?.id,
+            iot_id: selectedCaptureIot?.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
       setShowCaptureAreaCard(false);
       setSelectedCaptureBar(null);
       setSelectedCaptureIot(null);
-      alert("IoT 촬영 명령이 전송되었습니다.");
-      navigate(0);
+
+      if (response.ok) {
+        alert("IoT 촬영 명령이 전송되었습니다. 잠시 후 결과가 업데이트됩니다.");
+
+        // 5초 후 페이지 새로고침하여 분석 결과 확인
+        setTimeout(() => {
+          navigate(0);
+        }, 5000);
+      } else {
+        alert("촬영 명령 전송 실패: " + result.message);
+      }
     } catch (err) {
       setError("IoT 촬영 명령 전송에 실패했습니다.");
+      alert("네트워크 오류가 발생했습니다.");
     }
   };
 
