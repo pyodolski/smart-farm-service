@@ -351,10 +351,16 @@ def get_crop_groups(greenhouse_id):
 # IoT 촬영 및 분석 시스템
 # --------------------------
 # 상수
-RASPBERRY_PI_IP = "http://192.168.137.9:5002"
+# Raspberry Pi IP 주소
+# 로컬 테스트: "http://172.20.47.250:5002"
+# 배포 환경 (ngrok): "https://proud-adder-allegedly.ngrok-free.app"
+RASPBERRY_PI_IP = os.getenv('RASPBERRY_PI_IP', "https://proud-adder-allegedly.ngrok-free.app")
+
 IMAGE_DIR = "test_images/"
 UPLOAD_DIR = "static/uploads/crop_images/"
-IOT_IMAGE_UPLOAD_URL = "http://localhost:5001/api/greenhouses/iot-image-upload"  # IoT에서 이미지 업로드할 URL
+
+# 배포된 서버 주소
+IOT_IMAGE_UPLOAD_URL = "https://smart-farm-ignore.onrender.com/api/greenhouses/iot-image-upload"
 
 # 업로드 디렉토리 생성
 os.makedirs(IMAGE_DIR, exist_ok=True)

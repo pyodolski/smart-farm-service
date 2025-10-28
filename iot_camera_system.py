@@ -15,7 +15,13 @@ import json
 
 # --- 설정 ---
 IMAGE_DIR = "/home/pi/images"  # 촬영된 이미지 저장 디렉토리
-SERVER_BASE_URL = "http://localhost:5001"  # 메인 서버 URL (실제 환경에서는 ngrok URL 사용)
+
+# 배포된 서버 주소 (Render)
+SERVER_BASE_URL = "https://smart-farm-ignore.onrender.com"
+
+# 로컬 테스트용 (주석 처리)
+# SERVER_BASE_URL = "http://localhost:5001"
+
 IMAGE_UPLOAD_URL = f"{SERVER_BASE_URL}/api/greenhouses/iot-image-upload"
 SENSOR_UPLOAD_URL = f"{SERVER_BASE_URL}/api/sensor/upload"
 
