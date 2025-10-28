@@ -352,9 +352,9 @@ def get_crop_groups(greenhouse_id):
 # --------------------------
 # 상수
 # Raspberry Pi IP 주소
-# 로컬 테스트: "http://172.20.47.250:5002"
+# 로컬 테스트: "http://172.20.47.250:5002" (실제 라즈베리파이)
 # 배포 환경 (ngrok): "https://proud-adder-allegedly.ngrok-free.app"
-RASPBERRY_PI_IP = os.getenv('RASPBERRY_PI_IP', "https://proud-adder-allegedly.ngrok-free.app")
+RASPBERRY_PI_IP = os.getenv('RASPBERRY_PI_IP', "http://172.20.47.250:5002")
 
 IMAGE_DIR = "test_images/"
 UPLOAD_DIR = "static/uploads/crop_images/"
@@ -573,7 +573,12 @@ def iot_image_upload():
         group_id = request.form.get('group_id')
         iot_id = request.form.get('iot_id')
         
+        print(f"📥 IoT 이미지 업로드 요청 - group_id: {group_id}, iot_id: {iot_id}")
+        print(f"📥 Form data: {dict(request.form)}")
+        print(f"📥 Files: {list(request.files.keys())}")
+        
         if not group_id or not iot_id:
+            print(f"❌ 필수 파라미터 누락 - group_id: {group_id}, iot_id: {iot_id}")
             return jsonify({'message': 'group_id와 iot_id가 필요합니다.'}), 400
 
         # 업로드된 이미지 파일 확인

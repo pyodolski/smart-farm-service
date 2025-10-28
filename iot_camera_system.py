@@ -14,13 +14,14 @@ import threading
 import json
 
 # --- 설정 ---
-IMAGE_DIR = "/home/pi/images"  # 촬영된 이미지 저장 디렉토리
+# 로컬 테스트용 이미지 디렉토리
+IMAGE_DIR = "test_images"  # 로컬 테스트용
 
-# 배포된 서버 주소 (Render)
-SERVER_BASE_URL = "https://smart-farm-ignore.onrender.com"
+# 로컬 테스트용 서버 주소 (이 컴퓨터의 IP)
+SERVER_BASE_URL = "http://165.229.229.242:5001"
 
-# 로컬 테스트용 (주석 처리)
-# SERVER_BASE_URL = "http://localhost:5001"
+# 배포 환경용 (주석 처리)
+# SERVER_BASE_URL = "https://smart-farm-ignore.onrender.com"
 
 IMAGE_UPLOAD_URL = f"{SERVER_BASE_URL}/api/greenhouses/iot-image-upload"
 SENSOR_UPLOAD_URL = f"{SERVER_BASE_URL}/api/sensor/upload"
