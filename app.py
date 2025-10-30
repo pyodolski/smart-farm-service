@@ -109,4 +109,5 @@ def handle_exception(e):
 # 서버 실행
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
+    print("[DB]", os.getenv('DB_HOST'), os.getenv('DB_NAME'), os.getenv('DB_PORT'))
     app.run(host='0.0.0.0', port=port, debug=True)

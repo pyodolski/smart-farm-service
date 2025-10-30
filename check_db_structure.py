@@ -9,11 +9,12 @@ load_dotenv()
 def check_db_structure():
     try:
         conn = psycopg2.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'pyodolski'),
-            password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'smartfarm'),
-            port=int(os.getenv('DB_PORT', 5432))
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database=os.getenv('DB_NAME'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            sslmode=os.getenv('DB_SSLMODE', 'require')
         )
         
         cur = conn.cursor()
