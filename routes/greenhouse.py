@@ -426,6 +426,8 @@ def crop_groups_read():
         print("❌ 전체 오류:", e)
         return jsonify({'message': '서버 오류 발생', 'error': str(e)}), 500
 
+
+
 # --------------------------
 # 사진 업로드 및 분석 기능
 # --------------------------
@@ -527,6 +529,14 @@ def upload_and_analyze():
                     total_ripe += 3
                     total_unripe += 2
                     total_count += 5
+
+                # 분석 완료 후 이미지 파일 삭제 (디스크 공간 절약)
+                try:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        print(f"🗑️ 분석 완료된 이미지 삭제: {unique_filename}")
+                except OSError as e:
+                    print(f"⚠️ 이미지 삭제 실패: {e}")
 
         # DB 업데이트 (harvest_amount, total_amount, is_read)
         conn = get_db_connection()
@@ -638,6 +648,7 @@ def iot_image_upload():
         # DB 업데이트 (harvest_amount, total_amount, is_read)
         conn = get_db_connection()
         cur = conn.cursor()
+        
         cur.execute("""
             UPDATE crop_groups
             SET harvest_amount = %s,
@@ -645,10 +656,19 @@ def iot_image_upload():
                 is_read = %s
             WHERE id = %s
         """, (ripe, total, True if has_rotten else False, group_id))
+        
         conn.commit()
         conn.close()
 
         print(f"✅ DB 업데이트 완료 - 그룹 ID: {group_id}")
+
+        # 분석 완료 후 이미지 파일 삭제 (디스크 공간 절약)
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"🗑️ 분석 완료된 이미지 삭제: {unique_filename}")
+        except OSError as e:
+            print(f"⚠️ 이미지 삭제 실패: {e}")
 
         # 응답 반환
         return jsonify({

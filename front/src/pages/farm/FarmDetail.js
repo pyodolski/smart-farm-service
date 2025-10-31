@@ -4,7 +4,7 @@ import API_BASE_URL from "../../utils/config";
 import "./FarmDetail.css";
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
 import { FaCamera, FaEdit, FaTrash, FaUpload } from "react-icons/fa";
-import { GrLinkPrevious, GrFormPrevious } from "react-icons/gr";
+import { GrFormPrevious } from "react-icons/gr";
 import { AnimatePresence, motion } from "framer-motion";
 
 function FarmDetail() {
