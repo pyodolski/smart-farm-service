@@ -99,28 +99,40 @@ def upload_image():
 # 센서 데이터 수신
 @product_bp.route('/upload-sensor', methods=['POST'])
 def upload_sensor():
-    data = request.get_json()
-    temperature = data.get('temperature')
-    humidity = data.get('humidity')
-    timestamp = data.get('timestamp', datetime.now().isoformat())
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"status": "error", "message": "DB 연결 실패"}), 500
-
     try:
-        with conn.cursor() as cursor:
-            sql = """
-                INSERT INTO sensor_log (temperature, humidity, logged_at)
-                VALUES (%s, %s, %s)
-            """
-            cursor.execute(sql, (temperature, humidity, timestamp))
-            conn.commit()
-            return jsonify({"status": "success"}), 200
+        data = request.get_json()
+        temperature = data.get('temperature')
+        humidity = data.get('humidity')
+        gh_id = data.get('gh_id')
+        iot_id = data.get('iot_id')
+        timestamp = data.get('timestamp')
+        
+        if not all([temperature is not None, humidity is not None, gh_id]):
+            return jsonify({"status": "error", "message": "필수 파라미터 누락"}), 400
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "DB 연결 실패"}), 500
+
+        try:
+            with conn.cursor() as cursor:
+                # timestamp 컬럼명 확인 (logged_at이 아니라 timestamp)
+                sql = """
+                    INSERT INTO sensor_log (gh_id, temperature, humidity, timestamp)
+                    VALUES (%s, %s, %s, NOW())
+                """
+                cursor.execute(sql, (gh_id, temperature, humidity))
+                conn.commit()
+                print(f"✅ 센서 데이터 저장 완료 - gh_id: {gh_id}, 온도: {temperature}°C, 습도: {humidity}%")
+                return jsonify({"status": "success"}), 200
+        except Exception as e:
+            print(f"❌ 센서 데이터 저장 실패: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 500
+        finally:
+            conn.close()
     except Exception as e:
+        print(f"❌ 센서 업로드 오류: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-    finally:
-        conn.close()
 
 # 구독 취소
 @product_bp.route('/unsubscribe/<int:iot_id>', methods=['DELETE'])

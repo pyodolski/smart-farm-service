@@ -17,7 +17,7 @@ def get_latest_sensor():
             return jsonify({'error': 'DB 연결 실패'}), 500
             
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM sensor_log WHERE gh_id = %s ORDER BY logged_at DESC LIMIT 1", (gh_id,))
+        cur.execute("SELECT * FROM sensor_log WHERE gh_id = %s ORDER BY timestamp DESC LIMIT 1", (gh_id,))
         row = cur.fetchone()
         
         if not row:
@@ -31,7 +31,7 @@ def get_latest_sensor():
         return jsonify({
             'temperature': row['temperature'],
             'humidity': row['humidity'],
-            'timestamp': row['logged_at'],
+            'timestamp': row['timestamp'],
             'message': None
         })
     except Exception as e:

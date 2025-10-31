@@ -917,6 +917,93 @@ function FarmDetail() {
                             : "-"}
                         </div>
                       </div>
+
+                      {/* 분석 결과 및 이미지 표시 */}
+                      {selectedBar.group.last_analysis_result && (
+                        <div
+                          style={{
+                            marginTop: "20px",
+                            borderTop: "1px solid #eee",
+                            paddingTop: "15px",
+                          }}
+                        >
+                          <h3
+                            style={{ fontSize: "16px", marginBottom: "10px" }}
+                          >
+                            📊 최근 분석 결과
+                          </h3>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <div>
+                              익은 딸기:{" "}
+                              <b style={{ color: "#FF6B6B" }}>
+                                {selectedBar.group.last_analysis_result.ripe ||
+                                  0}
+                                개
+                              </b>
+                            </div>
+                            <div>
+                              안익은 딸기:{" "}
+                              <b style={{ color: "#4ECDC4" }}>
+                                {selectedBar.group.last_analysis_result
+                                  .unripe || 0}
+                                개
+                              </b>
+                            </div>
+                            <div>
+                              썩은 딸기:{" "}
+                              <b style={{ color: "#95A5A6" }}>
+                                {selectedBar.group.last_analysis_result
+                                  .has_rotten
+                                  ? "발견됨 ⚠️"
+                                  : "없음 ✅"}
+                              </b>
+                            </div>
+                            {selectedBar.group.last_analysis_result
+                              .analyzed_at && (
+                              <div style={{ fontSize: "12px", color: "#666" }}>
+                                분석 시간:{" "}
+                                {new Date(
+                                  selectedBar.group.last_analysis_result.analyzed_at
+                                ).toLocaleString("ko-KR")}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 촬영 이미지 표시 */}
+                          {selectedBar.group.last_image_path && (
+                            <div style={{ marginTop: "15px" }}>
+                              <h4
+                                style={{
+                                  fontSize: "14px",
+                                  marginBottom: "8px",
+                                }}
+                              >
+                                📸 촬영 이미지
+                              </h4>
+                              <img
+                                src={`${API_BASE_URL}/static/uploads/crop_images/${selectedBar.group.last_image_path}`}
+                                alt="분석 이미지"
+                                style={{
+                                  width: "100%",
+                                  borderRadius: "8px",
+                                  border: "1px solid #ddd",
+                                  maxHeight: "200px",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

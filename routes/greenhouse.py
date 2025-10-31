@@ -63,7 +63,33 @@ def find_col_groups(grid):
 
 def save_crop_groups(greenhouse_id, grid_data, conn):
     cur = conn.cursor()
-    cur.execute("DELETE FROM crop_groups WHERE greenhouse_id = %s", (greenhouse_id,))
+    
+    # 기존 그룹 조회
+    cur.execute("""
+        SELECT id, group_cells, crop_type, is_horizontal, 
+               harvest_amount, total_amount, last_image_path, last_analysis_result
+        FROM crop_groups 
+        WHERE greenhouse_id = %s
+    """, (greenhouse_id,))
+    existing_groups = cur.fetchall()
+    
+    # 기존 그룹을 딕셔너리로 변환 (group_cells를 키로 사용)
+    existing_dict = {}
+    for row in existing_groups:
+        group_id, cells, crop_type, is_horizontal, harvest, total, img_path, analysis = row
+        if isinstance(cells, str):
+            cells = json.loads(cells)
+        # cells를 정렬해서 문자열로 만들어 키로 사용
+        cells_key = json.dumps(sorted([tuple(c) for c in cells]))
+        existing_dict[cells_key] = {
+            'id': group_id,
+            'crop_type': crop_type,
+            'is_horizontal': is_horizontal,
+            'harvest_amount': harvest,
+            'total_amount': total,
+            'last_image_path': img_path,
+            'last_analysis_result': analysis
+        }
 
     row_groups = find_row_groups(grid_data)
     col_groups = find_col_groups(grid_data)
@@ -76,6 +102,8 @@ def save_crop_groups(greenhouse_id, grid_data, conn):
         selected_groups = col_groups
         is_horizontal = False
 
+    new_cells_keys = set()
+    
     for group in selected_groups:
         if is_horizontal:
             row_idx, start_col, end_col, value = group
@@ -84,10 +112,29 @@ def save_crop_groups(greenhouse_id, grid_data, conn):
             start_row, col_idx, end_row, value = group
             cells = [[row, col_idx] for row in range(start_row, end_row + 1)]
 
-        cur.execute("""
-            INSERT INTO crop_groups (greenhouse_id, group_cells, crop_type, is_horizontal, is_read)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (greenhouse_id, json.dumps(cells), value, is_horizontal, False))
+        cells_key = json.dumps(sorted([tuple(c) for c in cells]))
+        new_cells_keys.add(cells_key)
+        
+        # 기존 그룹이 있으면 업데이트, 없으면 새로 생성
+        if cells_key in existing_dict:
+            # 기존 그룹 업데이트 (crop_type만 업데이트, 분석 데이터는 유지)
+            existing = existing_dict[cells_key]
+            cur.execute("""
+                UPDATE crop_groups
+                SET crop_type = %s, is_horizontal = %s
+                WHERE id = %s
+            """, (value, is_horizontal, existing['id']))
+        else:
+            # 새 그룹 생성
+            cur.execute("""
+                INSERT INTO crop_groups (greenhouse_id, group_cells, crop_type, is_horizontal, is_read)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (greenhouse_id, json.dumps(cells), value, is_horizontal, False))
+    
+    # 더 이상 존재하지 않는 그룹 삭제
+    for cells_key, existing in existing_dict.items():
+        if cells_key not in new_cells_keys:
+            cur.execute("DELETE FROM crop_groups WHERE id = %s", (existing['id'],))
 
 # --------------------------
 # 비닐하우스 생성
@@ -316,7 +363,12 @@ def get_grid_data():
 def get_crop_groups(greenhouse_id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, group_cells, crop_type, is_horizontal, harvest_amount, total_amount FROM crop_groups WHERE greenhouse_id = %s", (greenhouse_id,))
+    cur.execute("""
+        SELECT id, group_cells, crop_type, is_horizontal, harvest_amount, total_amount, 
+               last_image_path, last_analysis_result 
+        FROM crop_groups 
+        WHERE greenhouse_id = %s
+    """, (greenhouse_id,))
     rows = cur.fetchall()
     conn.close()
     
@@ -330,13 +382,23 @@ def get_crop_groups(greenhouse_id):
             except Exception:
                 group_cells = []
         
+        # last_analysis_result 파싱
+        analysis_result = row[7]
+        if isinstance(analysis_result, str):
+            try:
+                analysis_result = json.loads(analysis_result)
+            except Exception:
+                analysis_result = None
+        
         groups.append({
             'id': row[0],
             'group_cells': group_cells,
             'crop_type': row[2],
             'is_horizontal': row[3],
             'harvest_amount': row[4],
-            'total_amount': row[5]
+            'total_amount': row[5],
+            'last_image_path': row[6],
+            'last_analysis_result': analysis_result
         })
     
     axis = None
@@ -354,7 +416,7 @@ def get_crop_groups(greenhouse_id):
 # Raspberry Pi IP 주소
 # 로컬 테스트: "http://172.20.47.250:5002" (실제 라즈베리파이)
 # 배포 환경 (ngrok): "https://proud-adder-allegedly.ngrok-free.app"
-RASPBERRY_PI_IP = os.getenv('RASPBERRY_PI_IP', "http://172.20.47.250:5002")
+RASPBERRY_PI_IP = os.getenv('RASPBERRY_PI_IP', "http://165.229.148.72:5002")
 
 IMAGE_DIR = "test_images/"
 UPLOAD_DIR = "static/uploads/crop_images/"
@@ -530,24 +592,36 @@ def upload_and_analyze():
                     total_unripe += 2
                     total_count += 5
 
-                # 분석 완료 후 이미지 파일 삭제 (디스크 공간 절약)
-                try:
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
-                        print(f"🗑️ 분석 완료된 이미지 삭제: {unique_filename}")
-                except OSError as e:
-                    print(f"⚠️ 이미지 삭제 실패: {e}")
 
-        # DB 업데이트 (harvest_amount, total_amount, is_read)
+
+        # DB 업데이트 (harvest_amount, total_amount, is_read, last_image_path, last_analysis_result)
         conn = get_db_connection()
         cur = conn.cursor()
+        
+        # 분석 결과를 JSON으로 저장
+        import json
+        analysis_result = {
+            'total_files': len(analyzed_files),
+            'total_ripe': total_ripe,
+            'total_unripe': total_unripe,
+            'total_count': total_count,
+            'has_rotten': has_any_rotten,
+            'analyzed_files': analyzed_files
+        }
+        
+        # 첫 번째 이미지 경로 저장
+        first_image = analyzed_files[0]['filename'] if analyzed_files else None
+        
         cur.execute("""
             UPDATE crop_groups
             SET harvest_amount = %s,
                 total_amount = %s,
-                is_read = %s
+                is_read = %s,
+                last_image_path = %s,
+                last_analysis_result = %s
             WHERE id = %s
-        """, (total_ripe, total_count, True if has_any_rotten else False, group_id))
+        """, (total_ripe, total_count, True if has_any_rotten else False, 
+              first_image, json.dumps(analysis_result), group_id))
         conn.commit()
         conn.close()
 
@@ -645,30 +719,37 @@ def iot_image_upload():
             total = 5
             has_rotten = False
 
-        # DB 업데이트 (harvest_amount, total_amount, is_read)
+        # DB 업데이트 (harvest_amount, total_amount, is_read, last_image_path, last_analysis_result)
         conn = get_db_connection()
         cur = conn.cursor()
+        
+        # 분석 결과를 JSON으로 저장
+        analysis_result = {
+            'filename': unique_filename,
+            'ripe': ripe,
+            'unripe': unripe,
+            'total': total,
+            'has_rotten': has_rotten,
+            'iot_id': iot_id,
+            'analyzed_at': datetime.now().isoformat()
+        }
         
         cur.execute("""
             UPDATE crop_groups
             SET harvest_amount = %s,
                 total_amount = %s,
-                is_read = %s
+                is_read = %s,
+                last_image_path = %s,
+                last_analysis_result = %s
             WHERE id = %s
-        """, (ripe, total, True if has_rotten else False, group_id))
+        """, (ripe, total, True if has_rotten else False, 
+              unique_filename, json.dumps(analysis_result), group_id))
         
         conn.commit()
         conn.close()
 
         print(f"✅ DB 업데이트 완료 - 그룹 ID: {group_id}")
-
-        # 분석 완료 후 이미지 파일 삭제 (디스크 공간 절약)
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                print(f"🗑️ 분석 완료된 이미지 삭제: {unique_filename}")
-        except OSError as e:
-            print(f"⚠️ 이미지 삭제 실패: {e}")
+        print(f"📸 이미지 저장: {unique_filename}")
 
         # 응답 반환
         return jsonify({
